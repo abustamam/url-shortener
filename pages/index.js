@@ -1,6 +1,32 @@
-import Head from 'next/head'
+import { useCallback, useState, useMemo } from 'react';
+import Head from 'next/head';
 
 export default function Home() {
+  const [url, setUrl] = useState('');
+  const [response, setResponse] = useState(null);
+  const [error, setError] = useState(null);
+  const submit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const res = await (
+        await fetch('/api/shorturl/new', {
+          method: 'POST',
+          body: JSON.stringify({ original_url: url }),
+        })
+      ).json();
+      if (res.ok) {
+        setResponse(res.record);
+      } else {
+        setError(res.error);
+      }
+    },
+    [url]
+  );
+  const shortUrl = useMemo(
+    () => response && `api/shorturl/${response.short_url}`,
+    [response]
+  );
+
   return (
     <div className="container">
       <Head>
@@ -9,43 +35,18 @@ export default function Home() {
       </Head>
 
       <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/zeit/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        <form onSubmit={submit}>
+          <input value={url} onChange={(e) => setUrl(e.target.value)} />
+          <button type="submit">Submit</button>
+        </form>
+        {shortUrl && (
+          <div>
+            Visit your URL:{' '}
+            <a href={`/${shortUrl}`} target="_blank">
+              {window.location.origin}/{shortUrl}
+            </a>
+          </div>
+        )}
       </main>
 
       <footer>
@@ -205,5 +206,5 @@ export default function Home() {
         }
       `}</style>
     </div>
-  )
+  );
 }

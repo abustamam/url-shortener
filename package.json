@@ -8,8 +8,13 @@
     "start": "next start"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "mongodb": "^3.6.0",
+    "mongoose": "^5.9.27",
     "next": "9.5.1",
+    "next-connect": "^0.8.1",
     "react": "16.13.1",
-    "react-dom": "16.13.1"
+    "react-dom": "16.13.1",
+    "short-id": "^0.1.0-1"
   }
 }
