@@ -34,7 +34,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  ${CONTAINER_NAME:-url-shortener}:
+  url-shortener:
     image: ${IMAGE_NAME}
     container_name: ${CONTAINER_NAME:-url-shortener}
     environment:
