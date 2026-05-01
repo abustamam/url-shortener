@@ -50,27 +50,27 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 
 ## Phase 2 — Caching with Redis
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 
 **Done when:** Redirect latency on warm paths is measurably lower than Phase 1 baseline, and cache-aside logic is confirmed working via Redis CLI.
 
 ### Implementation Tasks
 
-- [ ] Add `ioredis` dependency
-- [ ] Add `REDIS_URL` to `.env.example`
-- [ ] Create `src/lib/redis.ts` — singleton Redis client
-- [ ] Update `GET /:slug` handler:
+- [x] Add `ioredis` dependency
+- [x] Add `REDIS_URL` to `.env.example`
+- [x] Create `src/lib/redis.ts` — singleton Redis client
+- [x] Update `GET /:slug` handler:
   1. Check Redis for slug key
   2. On hit: redirect immediately (no DB query)
   3. On miss: query Postgres, populate Redis with TTL, redirect
-- [ ] Choose and document TTL (e.g., 24h) — add to env config as `CACHE_TTL_SECONDS`
-- [ ] Handle deletion: if a slug is ever deleted from DB, also `DEL` from Redis
-- [ ] Add Redis service to `docker-compose.yml`
+- [x] Choose and document TTL (e.g., 24h) — add to env config as `CACHE_TTL_SECONDS`
+- [x] Handle deletion: if a slug is ever deleted from DB, also `DEL` from Redis (`delCached` exported in `src/lib/redis.ts`)
+- [x] Add Redis service to `docker-compose.yml`
 
 ### Deployment Steps
 
-- [ ] Redis is already defined in `docker-compose.yml` — no separate install needed
-- [ ] Set `REDIS_URL=redis://redis:6379` in `.env` (service name `redis` from compose network)
+- [x] Redis is already defined in `docker-compose.yml` — no separate install needed
+- [x] Set `REDIS_URL=redis://redis:6379` in `.env` (service name `redis` from compose network)
 - [ ] `docker compose up -d` — compose starts Redis alongside the app and Postgres
 
 ### Verification
@@ -240,7 +240,7 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 | Phase | Concept | Status |
 |-------|---------|--------|
 | 1 | Baseline: Hono + Postgres + Swagger | ✅ Complete |
-| 2 | Caching with Redis | ⬜ Not Started |
+| 2 | Caching with Redis | ✅ Complete |
 | 3 | Rate Limiting | ⬜ Not Started |
 | 4 | Horizontal Scaling | ⬜ Not Started |
 | 5 | Observability (LGTM stack) | ⬜ Not Started |
