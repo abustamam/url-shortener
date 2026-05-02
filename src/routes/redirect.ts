@@ -3,6 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { eq, sql } from 'drizzle-orm'
 import { db } from '../db'
 import { urls } from '../db/schema'
+import { getCached, setCached } from '../lib/redis'
 
 const SlugParamSchema = z.object({
   slug: z.string().openapi({ example: 'abc12345' }),
@@ -33,7 +34,28 @@ export const redirectRouter = new OpenAPIHono()
 
 redirectRouter.openapi(redirectRoute, async (c) => {
   const { slug } = c.req.valid('param')
+  const ttl = Number(process.env.CACHE_TTL_SECONDS ?? 86400)
 
+  // Check cache first — fail-open: if Redis is unavailable, fall through to Postgres
+  let cached: string | null = null
+  try {
+    cached = await getCached(slug)
+  } catch {
+    // Redis unavailable — proceed with Postgres fallback
+  }
+
+  if (cached) {
+    // Fire-and-forget hit count increment (same as cold path — doesn't block redirect)
+    db.update(urls)
+      .set({ hitCount: sql`${urls.hitCount} + 1` })
+      .where(eq(urls.slug, slug))
+      .execute()
+      .catch(() => {})
+
+    return c.redirect(cached, 301)
+  }
+
+  // Cache miss — query Postgres
   const result = await db
     .select()
     .from(urls)
@@ -44,12 +66,17 @@ redirectRouter.openapi(redirectRoute, async (c) => {
     return c.json({ error: 'Slug not found' }, 404)
   }
 
-  // Fire-and-forget: increment hit count without blocking the redirect
+  const { originalUrl } = result[0]
+
+  // Populate cache — fire-and-forget so a Redis write failure doesn't block the redirect
+  setCached(slug, originalUrl, ttl).catch(() => {})
+
+  // Fire-and-forget hit count
   db.update(urls)
     .set({ hitCount: sql`${urls.hitCount} + 1` })
     .where(eq(urls.slug, slug))
     .execute()
-    .catch(() => {}) // swallow errors — redirect is more important than the counter
+    .catch(() => {})
 
-  return c.redirect(result[0].originalUrl, 301)
+  return c.redirect(originalUrl, 301)
 })

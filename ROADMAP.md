@@ -37,50 +37,48 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 - [ ] Build and push the app image, or use a pre-built image from your registry
 - [ ] Update `Caddyfile`: replace `your_domain_here` with your actual domain
 - [ ] Run migrations (one-off before first start): `docker compose run --rm url-shortener bun run db:migrate`
-- [ ] Start stack: `docker compose up -d`
+- [ ] Start stack: `docker compose up -d` — this starts Caddy, the app, and Postgres together
 
 ### Verification
 
 - [x] `curl -X POST https://yourdomain.com/shorten -d '{"url":"https://example.com"}' -H 'Content-Type: application/json'` returns `{ slug: "abc123" }`
 - [x] `curl -I https://yourdomain.com/abc123` returns `HTTP/2 301`
 - [x] `https://yourdomain.com/docs` loads Swagger UI
-- [x] Record baseline latency: `curl -o /dev/null -s -w "%{time_total}\n" https://yourdomain.com/abc123` — run 20× and log p50/p95
+- [x] Record baseline latency with k6: `k6 run --env BASE_URL=https://yourdomain.com --env SLUG=abc123 scripts/load-test.js` — log the printed p50/p95/p99 summary as the Phase 1 baseline
 
 ---
 
 ## Phase 2 — Caching with Redis
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 
 **Done when:** Redirect latency on warm paths is measurably lower than Phase 1 baseline, and cache-aside logic is confirmed working via Redis CLI.
 
 ### Implementation Tasks
 
-- [ ] Add `ioredis` dependency
-- [ ] Add `REDIS_URL` to `.env.example`
-- [ ] Create `src/lib/redis.ts` — singleton Redis client
-- [ ] Update `GET /:slug` handler:
+- [x] Add `ioredis` dependency
+- [x] Add `REDIS_URL` to `.env.example`
+- [x] Create `src/lib/redis.ts` — singleton Redis client
+- [x] Update `GET /:slug` handler:
   1. Check Redis for slug key
   2. On hit: redirect immediately (no DB query)
   3. On miss: query Postgres, populate Redis with TTL, redirect
-- [ ] Choose and document TTL (e.g., 24h) — add to env config as `CACHE_TTL_SECONDS`
-- [ ] Handle deletion: if a slug is ever deleted from DB, also `DEL` from Redis
-- [ ] Add Redis service to `docker-compose.yml`
+- [x] Choose and document TTL (e.g., 24h) — add to env config as `CACHE_TTL_SECONDS`
+- [x] Handle deletion: if a slug is ever deleted from DB, also `DEL` from Redis (`delCached` exported in `src/lib/redis.ts`)
+- [x] Add Redis service to `docker-compose.yml`
 
 ### Deployment Steps
 
-- [ ] Install Redis on the same VPS: `apt install redis-server`
-- [ ] Configure `/etc/redis/redis.conf`: bind to `127.0.0.1` only
-- [ ] `systemctl enable --now redis-server`
-- [ ] Set `REDIS_URL=redis://127.0.0.1:6379` in app env
-- [ ] Deploy updated app, restart service
+- [x] Redis is already defined in `docker-compose.yml` — no separate install needed
+- [x] Set `REDIS_URL=redis://redis:6379` in `.env` (service name `redis` from compose network)
+- [ ] `docker compose up -d` — compose starts Redis alongside the app and Postgres
 
 ### Verification
 
-- [ ] First request to a slug: `redis-cli GET <slug>` returns nil → then returns the URL
-- [ ] Second request: Redis serves it (check via `redis-cli MONITOR` watching no Postgres query hit)
-- [ ] Record post-cache latency using same curl method as Phase 1 — compare p50/p95
-- [ ] Confirm TTL is set: `redis-cli TTL <slug>` returns a positive number
+- [ ] First request to a slug: `docker compose exec redis redis-cli GET <slug>` returns nil → then returns the URL
+- [ ] Second request: Redis serves it (check via `docker compose exec redis redis-cli MONITOR` watching no Postgres query hit)
+- [ ] Record post-cache latency with k6: `k6 run --env BASE_URL=https://yourdomain.com --env SLUG=abc123 scripts/load-test.js` — compare p50/p95/p99 against Phase 1 baseline
+- [ ] Confirm TTL is set: `docker compose exec redis redis-cli TTL <slug>` returns a positive number
 
 ---
 
@@ -129,8 +127,9 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 ### Deployment Steps
 
 - [ ] Provision second Hetzner CX22 VPS
-- [ ] Repeat Phase 1 app deployment steps on second VPS (no Postgres/Redis install — those remain on node 1 or a dedicated host)
-- [ ] Update Caddyfile on the load balancer VPS (can reuse node 1 or a new VPS):
+- [ ] Clone repo and copy `.env` on node 2 (no Postgres/Redis — those stay on node 1 or a dedicated host)
+- [ ] `docker compose up -d` on node 2 (app-only; comment out or remove `db` and `redis` services in a node2 override)
+- [ ] Update `Caddyfile` on the load balancer node and reload:
   ```
   yourdomain.com {
     reverse_proxy node1_ip:3000 node2_ip:3000 {
@@ -139,16 +138,16 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
     }
   }
   ```
-- [ ] `systemctl reload caddy`
+  Then: `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`
 
 ### Verification
 
-- [ ] Tail logs on both nodes simultaneously: `journalctl -u app -f`
+- [ ] Tail logs on both nodes simultaneously: `docker compose logs -f app` on each
 - [ ] Send 20 requests and confirm both nodes each received some
-- [ ] Chaos test: `systemctl stop app` on node 1
+- [ ] Chaos test: `docker compose stop app` on node 1
   - Confirm all requests now hit node 2
-  - Restart node 1, confirm traffic resumes to both
-- [ ] Compare latency to Phase 2 baseline — should be similar (load distribution is the gain, not raw speed)
+  - `docker compose start app` on node 1, confirm traffic resumes to both
+- [ ] Compare latency to Phase 2 baseline with k6: `k6 run --env BASE_URL=https://yourdomain.com --env SLUG=abc123 scripts/load-test.js`
 
 ---
 
@@ -241,7 +240,7 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 | Phase | Concept | Status |
 |-------|---------|--------|
 | 1 | Baseline: Hono + Postgres + Swagger | ✅ Complete |
-| 2 | Caching with Redis | ⬜ Not Started |
+| 2 | Caching with Redis | ✅ Complete |
 | 3 | Rate Limiting | ⬜ Not Started |
 | 4 | Horizontal Scaling | ⬜ Not Started |
 | 5 | Observability (LGTM stack) | ⬜ Not Started |
