@@ -6,6 +6,9 @@ node_modules/
 # Drafts
 drafts/
 
+# DB data (Docker volume)
+db/
+
 # Claude Code
 .claude/*
 !.claude/skills
