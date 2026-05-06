@@ -1,12 +1,6 @@
 import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
-import { Redis } from 'ioredis'
-
-const redis = new Redis(process.env.REDIS_URL ?? 'redis://127.0.0.1:6379')
-
-redis.on('error', (err) => {
-  console.error({ msg: 'Redis connection error (rate limiter)', err })
-})
+import { redis } from '../lib/redis'
 
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX ?? 10)
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60000)
