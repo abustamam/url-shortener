@@ -84,18 +84,19 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 
 ## Phase 3 — Rate Limiting
 
-**Status:** ⬜ Not Started
+**Status:** ✅ Complete
 
 **Done when:** `POST /shorten` returns `429 Too Many Requests` with a `Retry-After` header after exceeding the configured limit per IP.
 
 ### Implementation Tasks
 
-- [ ] Add `src/middleware/rateLimit.ts` — sliding window algorithm using Redis `ZADD` / `ZREMRANGEBYSCORE` / `ZCARD`
-- [ ] Algorithm: for each request, add timestamp to a sorted set keyed by IP; remove entries outside the window; count remaining
-- [ ] Return 429 with `Retry-After` header when count exceeds limit
-- [ ] Apply middleware only to `POST /shorten`
-- [ ] Add env vars: `RATE_LIMIT_MAX` (e.g., 10), `RATE_LIMIT_WINDOW_MS` (e.g., 60000)
-- [ ] Update `.env.example`
+- [x] Add `src/middleware/rateLimit.ts` — sliding window algorithm using Redis `ZADD` / `ZREMRANGEBYSCORE` / `ZCARD`
+- [x] Algorithm: for each request, add timestamp to a sorted set keyed by IP; remove entries outside the window; count remaining
+- [x] Return 429 with `Retry-After` header when count exceeds limit
+- [x] Apply middleware only to `POST /shorten`
+- [x] Add env vars: `RATE_LIMIT_MAX` (e.g., 10), `RATE_LIMIT_WINDOW_MS` (e.g., 60000)
+- [x] Update `.env.example`
+- [x] Reuse singleton Redis client from `src/lib/redis.ts` (Phase 2) instead of creating a second connection
 
 ### Deployment Steps
 
@@ -241,7 +242,7 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 |-------|---------|--------|
 | 1 | Baseline: Hono + Postgres + Swagger | ✅ Complete |
 | 2 | Caching with Redis | ✅ Complete |
-| 3 | Rate Limiting | ⬜ Not Started |
+| 3 | Rate Limiting | ✅ Complete |
 | 4 | Horizontal Scaling | ⬜ Not Started |
 | 5 | Observability (LGTM stack) | ⬜ Not Started |
 | 6 | Database Replication (Stretch) | ⬜ Not Started |
