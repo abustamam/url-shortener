@@ -71,14 +71,14 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 
 - [x] Redis is already defined in `docker-compose.yml` — no separate install needed
 - [x] Set `REDIS_URL=redis://redis:6379` in `.env` (service name `redis` from compose network)
-- [ ] `docker compose up -d` — compose starts Redis alongside the app and Postgres
+- [x] `docker compose up -d` — compose starts Redis alongside the app and Postgres
 
 ### Verification
 
-- [ ] First request to a slug: `docker compose exec redis redis-cli GET <slug>` returns nil → then returns the URL
-- [ ] Second request: Redis serves it (check via `docker compose exec redis redis-cli MONITOR` watching no Postgres query hit)
-- [ ] Record post-cache latency with k6: `k6 run --env BASE_URL=https://yourdomain.com --env SLUG=abc123 scripts/load-test.js` — compare p50/p95/p99 against Phase 1 baseline
-- [ ] Confirm TTL is set: `docker compose exec redis redis-cli TTL <slug>` returns a positive number
+- [x] First request to a slug: `docker compose exec redis redis-cli GET <slug>` returns nil → then returns the URL
+- [x] Second request: Redis serves it (check via `docker compose exec redis redis-cli MONITOR` watching no Postgres query hit)
+- [x] Record post-cache latency with k6: `k6 run --env BASE_URL=https://yourdomain.com --env SLUG=abc123 scripts/load-test.js` — compare p50/p95/p99 against Phase 1 baseline
+- [x] Confirm TTL is set: `docker compose exec redis redis-cli TTL <slug>` returns a positive number
 
 ---
 
