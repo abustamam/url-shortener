@@ -41,6 +41,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/urlshortener
       PORT: ${PORT:-3000}
       REDIS_URL: redis://redis:6379
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
     ports:
       - "${PORT}:${PORT}"
     depends_on:
