@@ -121,8 +121,8 @@ Each phase has one infrastructure concept. Each section tracks implementation ta
 
 ### Implementation Tasks
 
-- [ ] Add `GET /health` endpoint returning `{ status: "ok" }` — used by Caddy for health checks
-- [ ] Audit for any in-memory state (session maps, local caches, etc.) — there should be none; document the audit
+- [x] Add `GET /health` endpoint returning `{ status: "ok" }` — used by Caddy for health checks
+- [x] Audit for any in-memory state (session maps, local caches, etc.) — there should be none; document the audit
 - [ ] Confirm Redis and Postgres URLs are network-accessible (not `localhost`) from both nodes
 
 ### Deployment Steps

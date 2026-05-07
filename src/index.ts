@@ -2,8 +2,11 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { swaggerUI } from '@hono/swagger-ui'
 import { shortenRouter } from './routes/shorten'
 import { redirectRouter } from './routes/redirect'
+import { healthRouter } from './routes/health'
 
 const app = new OpenAPIHono()
+
+app.route('/', healthRouter)
 
 app.route('/', shortenRouter)
 
