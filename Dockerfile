@@ -10,6 +10,7 @@ COPY drizzle ./drizzle
 COPY drizzle.config.ts ./
 
 ENV NODE_ENV=production
+ENV SERVER_ID=url-shortener
 EXPOSE 3000
 
 # Run migrations then start the server
