@@ -6,6 +6,11 @@ import { healthRouter } from './routes/health'
 
 const app = new OpenAPIHono()
 
+app.use('*', (c, next) => {
+  c.header('X-Served-By', process.env.SERVER_ID || 'url-shortener')
+  return next()
+})
+
 app.route('/', healthRouter)
 
 app.route('/', shortenRouter)

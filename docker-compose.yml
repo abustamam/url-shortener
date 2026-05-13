@@ -43,6 +43,7 @@ services:
       REDIS_URL: redis://redis:6379
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10}
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      SERVER_ID: ${SERVER_ID:-url-shortener}
     ports:
       - "${PORT}:${PORT}"
     depends_on:
