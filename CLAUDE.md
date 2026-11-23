@@ -19,12 +19,17 @@ See [ROADMAP.md](ROADMAP.md) for the full phase plan.
 ### Workflow per phase
 
 ```
-git checkout -b phase/N-name        # start new phase
-# ... build, deploy, measure, write post ...
+git fetch origin
+git worktree add .claude/worktrees/phase-N-name -b phase/N-name origin/main   # start new phase in its own worktree
+# ... work inside that directory: build, deploy, measure, write post ...
 # open PR → merge to main
-git tag vN-short-name               # tag the merge commit on main
+git fetch origin
+git tag vN-short-name origin/main   # tag the merge commit on main
 git push origin vN-short-name       # push tag
+git worktree remove .claude/worktrees/phase-N-name   # then delete the branch
 ```
+
+Never switch branches in the main checkout: another session may be working in it.
 
 Blog posts link to the PR (diff = what changed) and the tag (full state at that phase).
 
